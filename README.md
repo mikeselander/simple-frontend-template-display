@@ -17,6 +17,9 @@ I hope this speeds up your development work!
 
 #### Changelog 
 
+= 0.3.0 =
+* Added get_similar_pages function to retrieve pages with the same template
+
 = 0.2.0 =
 * Added a drop down with the filename so you can see all of the template data
 * Changed add_menu method to the preferred add_node

@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) OR exit;
 /*
 Plugin Name: Simple Frontend Template Display
 Plugin URI: http://www.mikeselander.com/
-Description: Displays the current page template in the admin bar for quick & easy reference
+Description: Displays the current page template in the admin toolbar for quick & easy reference
 Version: 0.3
 Author: Mike Selander
 Author URI: http://www.mikeselander.com/
@@ -19,7 +19,7 @@ License: GPL2
  * @category plugins
  * @author Mike Selander
  * @since 0.0.0
- * @link      http://mikeselander.com
+ * @link http://mikeselander.com
  * @copyright 2013 Mike Selander
  */
 class PageTemplateDisplay{
@@ -36,7 +36,7 @@ class PageTemplateDisplay{
 	public function __construct(){
 
 		add_action('admin_bar_menu', array( $this, "page_template_display" ), 500 );
-		add_action('admin_bar_menu', array( $this, "get_similar_pages" ), 500 );
+		add_action('admin_bar_menu', array( $this, "get_similar_pages" ), 501 );
 
 	} // end __construct()
 
@@ -149,36 +149,44 @@ class PageTemplateDisplay{
 			$post_id = $wp_query->post->ID;
 			$i = 1;
 
+			// query the pages
 			$args = array(
-	            'post_type' 	=> 'page',
-	            'meta_key' 		=> '_wp_page_template',
-	            'meta_value' 	=> $template,
-	            'post__not_in'	=> $post_id
+	           'post_type' 	=> 'page',
+			   'meta_key' => '_wp_page_template',
+			   'meta_value' => $template,
+	           'exclude'		=> $post_id
 	        );
 
-			$page_template = new WP_Query($args);
+	        $pages = get_pages( $args );
 
-			if ( !empty( $page_template->posts ) ) {
+			// if the query returns results, add a header node
+			if ( !empty( $pages ) ) {
 
 				$wp_admin_bar->add_node(
 					array(
 						'id' 		=> 'similar_pages',
-						'title' 	=> __( 'Similar Pages:', 'page_template' ),
+						'title' 	=> "<strong>".__( 'Similar Pages:', 'page_template' )."</strong>",
 						'parent'	=> page_template,
 						'href' 		=> false
 					)
 				);
 
-			    foreach( $page_template->posts as $page ){
+				// Loop through the results
+			    foreach( $pages as $page ){
 
-					$wp_admin_bar->add_node(
-						array(
-							'id' 		=> 'similar_page_'.$i,
-							'title' 	=> $page->post_title,
-							'parent'	=> page_template,
-							'href' 		=> get_permalink($page->ID)
-						)
-					);
+					// Loop until we hit 15
+					if ( $i < 16 ) {
+
+						$wp_admin_bar->add_node(
+							array(
+								'id' 		=> 'similar_page_'.$i,
+								'title' 	=> $page->post_title,
+								'parent'	=> page_template,
+								'href' 		=> get_permalink($page->ID)
+							)
+						);
+
+					} // end if
 
 					$i++;
 
