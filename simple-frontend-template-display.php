@@ -4,7 +4,7 @@ defined( 'ABSPATH' ) OR exit;
 Plugin Name: Simple Frontend Template Display
 Plugin URI: http://www.mikeselander.com/
 Description: Displays the current page template in the admin toolbar for quick & easy reference
-Version: 0.3
+Version: 0.3.1
 Author: Mike Selander
 Author URI: http://www.mikeselander.com/
 License: GPL2
@@ -24,7 +24,7 @@ License: GPL2
  */
 class PageTemplateDisplay{
 
-	const VERSION = '0.3.0';
+	const VERSION = '0.3.1';
 
 	/**
 	 * Constructor function.
@@ -73,7 +73,7 @@ class PageTemplateDisplay{
 						array(
 							'id' 		=> 'page_template_slug',
 							'title' 	=> __( $this->get_current_page_slug(), 'page_template' ),
-							'parent'	=> page_template,
+							'parent'	=> 'page_template',
 							'href' 		=> false
 						)
 					);
@@ -152,9 +152,9 @@ class PageTemplateDisplay{
 			// query the pages
 			$args = array(
 	           'post_type' 	=> 'page',
-			   'meta_key' => '_wp_page_template',
+			   'meta_key' 	=> '_wp_page_template',
 			   'meta_value' => $template,
-	           'exclude'		=> $post_id
+	           'exclude'	=> $post_id
 	        );
 
 	        $pages = get_pages( $args );
@@ -166,7 +166,7 @@ class PageTemplateDisplay{
 					array(
 						'id' 		=> 'similar_pages',
 						'title' 	=> "<strong>".__( 'Similar Pages:', 'page_template' )."</strong>",
-						'parent'	=> page_template,
+						'parent'	=> 'page_template',
 						'href' 		=> false
 					)
 				);
@@ -181,7 +181,7 @@ class PageTemplateDisplay{
 							array(
 								'id' 		=> 'similar_page_'.$i,
 								'title' 	=> $page->post_title,
-								'parent'	=> page_template,
+								'parent'	=> 'page_template',
 								'href' 		=> get_permalink($page->ID)
 							)
 						);

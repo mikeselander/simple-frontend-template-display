@@ -12,10 +12,14 @@ I hope this speeds up your development work!
 #### Usage 
 
 1. Upload `Simple Frontend Template Display` folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
+2. Activate the plugin through the `Plugins` menu in WordPress
 3. Magic! On your pages, the name of the template will show on the toolbar on the frontend
 
 #### Changelog 
+
+= 0.3.1 =
+* Fixed Strict PHP standards error concerning line 184
+* Tested up to 4.0
 
 = 0.3.0 =
 * Added get_similar_pages function to retrieve pages with the same template
