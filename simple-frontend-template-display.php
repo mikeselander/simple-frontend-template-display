@@ -1,13 +1,15 @@
 <?php
 defined( 'ABSPATH' ) OR exit;
+
 /*
-Plugin Name: Simple Frontend Template Display
-Plugin URI: http://www.mikeselander.com/
-Description: Displays the current page template in the admin toolbar for quick & easy reference
-Version: 0.3.1
-Author: Mike Selander
-Author URI: http://www.mikeselander.com/
-License: GPL2
+ * Plugin Name: Simple Frontend Template Display
+ * Plugin URI: http://www.mikeselander.com/
+ * Description: Displays the current page template in the admin toolbar for quick & easy reference
+ * Version: 0.4.0
+ * Author: Mike Selander
+ * Text Domain: page-template-display
+ * Author URI: http://www.mikeselander.com/
+ * License: GPL2
 */
 
 /**
@@ -24,60 +26,66 @@ License: GPL2
  */
 class PageTemplateDisplay{
 
-	const VERSION = '0.3.1';
+	const VERSION = '0.4.0';
 
 	/**
-	 * Constructor function.
+	 * Hook into appropriate actions in WordPress.
 	 *
-	 * @access public
-	 * @since 0.1.0
+	 * @see add_action, $this->page_template_display, $this->get_similar_pages
+	 *
 	 * @return void
 	 */
-	public function __construct(){
+	public function _hooks(){
 
-		add_action('admin_bar_menu', array( $this, "page_template_display" ), 500 );
-		add_action('admin_bar_menu', array( $this, "get_similar_pages" ), 501 );
+		add_action( 'admin_bar_menu', array( $this, "page_template_display" ), 500 );
+		add_action( 'admin_bar_menu', array( $this, "get_similar_pages" ), 501 );
 
-	} // end __construct()
+	} // end _hooks()
+
 
 	/**
 	 * Displays the template name on the admin menu bar
 	 *
-	 * @access public
-	 * @since 0.1.0
+	 * @see WP_Admin_Bar
+	 *
+	 * @param type $wp_admin_bar Object containining the Wp Admin Bar items.
+	 * @return void.
 	 */
 	public function page_template_display( $wp_admin_bar ){
-		//global $wp_admin_bar;
 
-		if (!is_super_admin() || !is_admin_bar_showing() )
+		// Check for appropriate priveledges & that admin bar is running
+		if ( !is_super_admin() || !is_admin_bar_showing() ){
 			return;
+		}
 
 		// if you're not in the admin backend & it's a page
-		if ( ( !is_admin() ) && ( is_page() ) ){
+		if ( !is_admin() && is_page() ){
 
-			// if get_current_template_name returns - set the menu item
-			if ( $this->get_current_template_name() ) {
+			// if _get_current_template_name returns - set the menu item
+			if ( $this->_get_current_template_name() ) {
 
 				$wp_admin_bar->add_node(
 					array(
 						'id' 		=> 'page_template',
-						'title' 	=> __( 'Template: '.$this->get_current_template_name(), 'page_template' ),
+						'title' 	=> __( 'Template: ' . $this->_get_current_template_name(), 'page-template-display' ),
 						'parent'	=> false,
 						'href' 		=> false
 					)
 				);
 
-				// if get_current_page_slug returns - set the next menu item
-				if ( $this->get_current_page_slug() ) {
+				// if _get_current_page_slug returns - set the next menu item
+				if ( $this->_get_current_page_slug() ) {
+
 					$wp_admin_bar->add_node(
 						array(
 							'id' 		=> 'page_template_slug',
-							'title' 	=> __( $this->get_current_page_slug(), 'page_template' ),
+							'title' 	=> __( $this->_get_current_page_slug(), 'page-template-display' ),
 							'parent'	=> 'page_template',
 							'href' 		=> false
 						)
 					);
-				}
+
+				} // end if _get_current_page_slug returns
 
 			} // end if template name is returned
 
@@ -85,67 +93,79 @@ class PageTemplateDisplay{
 
 	} // end page_template_display()
 
+
 	/**
-	 * Grabs the template name
+	 * Finds and returns the template name from all available page templates.
 	 *
-	 * @access public
-	 * @since 0.1.0
-	 * @return Template name string
+	 * @access private
+	 *
+	 * @see wp_get_theme()
+	 *
+	 * @return string Give name of template file used, "Default" if none.
 	 */
-	public function get_current_template_name(){
+	private function _get_current_template_name(){
+		$returned = false;
 
 		// get all templates
 		$all_templates = wp_get_theme()->get_page_templates();
-		$returned = false;
+
+		// Loop through templates and match file w/ith a name
 		foreach ( $all_templates as $filename => $name ) {
 
 			// if the template matches one of the filenames, return
-			if ( $this->get_current_page_slug() == $filename ){
+			if ( $this->_get_current_page_slug() == $filename ){
 				return $name;
-				$returned = true;
 			};
 
 		} // end foreach
 
-		// If no slug is returned, then return "Default"
-		if ( $returned === false ){
-			return "Default";
-		}
+		// If no template is matched, then return "Default"
+		return "Default";
 
-	} // end get_current_template_name()
+	} // end _get_current_template_name()
+
 
 	/**
-	 * Grabs the template slug
+	 * Finds the current page template slug used on a page.
 	 *
-	 * @access public
-	 * @since 0.2.0
-	 * @return Template slug string
+	 * @access private
+	 *
+	 * @see get_page_template_slug
+	 * @global object $wp_query Description.
+	 *
+	 * @return string Slug/path of current page template used.
 	 */
-	public function get_current_page_slug(){
+	private function _get_current_page_slug(){
 		global $wp_query;
 
 		$post_id = $wp_query->post->ID;
-		return get_page_template_slug($post_id);
-	} // end get_current_page_slug()
+		return get_page_template_slug( $post_id );
+
+	} // end _get_current_page_slug()
+
 
 	/**
-	 * Grabs other pages with the same template
+	 * Identify and grab other pages using the same template
 	 *
-	 * @access public
-	 * @since 0.3.0
-	 * @return list of pages with
+	 * @see WP_Admin_Bar, WP_Query
+	 * @global object $wp_query
+	 *
+	 * @param type $wp_admin_bar Object containining the Wp Admin Bar items.
+	 * @return void.
 	 */
 	public function get_similar_pages( $wp_admin_bar ){
 		global $wp_query;
 
-		if (!is_super_admin() || !is_admin_bar_showing() )
+		// Check for appropriate priveledges & that admin bar is running
+		if ( !is_super_admin() || !is_admin_bar_showing() ){
 			return;
+		}
 
 		// if you're not in the admin backend & it's a page
-		if ( ( !is_admin() ) && ( is_page() ) ){
+		if ( !is_admin() && is_page() ){
 
 			// define the variables
-			$template = $this->get_current_page_slug();
+			$template = $this->_get_current_page_slug();
 			$post_id = $wp_query->post->ID;
 			$i = 1;
 
@@ -165,7 +185,7 @@ class PageTemplateDisplay{
 				$wp_admin_bar->add_node(
 					array(
 						'id' 		=> 'similar_pages',
-						'title' 	=> "<strong>".__( 'Similar Pages:', 'page_template' )."</strong>",
+						'title' 	=> "<strong>" . __( 'Similar Pages:', 'page-template-display' )."</strong>",
 						'parent'	=> 'page_template',
 						'href' 		=> false
 					)
@@ -179,10 +199,10 @@ class PageTemplateDisplay{
 
 						$wp_admin_bar->add_node(
 							array(
-								'id' 		=> 'similar_page_'.$i,
+								'id' 		=> 'similar_page_' . $i,
 								'title' 	=> $page->post_title,
 								'parent'	=> 'page_template',
-								'href' 		=> get_permalink($page->ID)
+								'href' 		=> get_permalink( $page->ID )
 							)
 						);
 
@@ -198,8 +218,10 @@ class PageTemplateDisplay{
 
 	} // end get_similar_pages()
 
-} // end PageTemplateDisplay
+} // end Class
 
+// Register class & call hooks
 $display_template = new PageTemplateDisplay;
+$display_template->_hooks();
 
 ?>
